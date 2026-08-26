@@ -442,6 +442,37 @@ class TestGraphIO(unittest.TestCase):
         self.assertEqual(get_h_box_label(g2, v2_new), 1j)
         self.assertEqual(get_h_box_label(g2, v3_new), 2.5+1.3j)
 
+class TestGraphDiff(unittest.TestCase):
+
+    def test_scalar_change_roundtrip(self):
+        g1 = Graph()
+        g2 = g1.clone()
+        g2.scalar.power2 = 3
+        g2.scalar.phase = Fraction(1, 4)
+        g2.scalar.phasenodes = [Fraction(1, 2)]
+        g2.scalar.sum_of_phases = {Fraction(3, 4): 2}
+        g2.scalar.floatfactor = 2.5 + 1.5j
+
+        diff = GraphDiff(g1, g2)
+        roundtripped_diff = GraphDiff.from_json(diff.to_json())
+
+        self.assertEqual(diff.apply_diff(g1).scalar, g2.scalar)
+        self.assertEqual(roundtripped_diff.changed_scalar, g2.scalar)
+        applied = roundtripped_diff.apply_diff(g1)
+        self.assertEqual(applied.scalar, g2.scalar)
+        self.assertIsNot(applied.scalar, roundtripped_diff.changed_scalar)
+
+    def test_unchanged_scalar_is_omitted(self):
+        g = Graph()
+        diff = GraphDiff(g, g.clone())
+
+        self.assertIsNone(diff.changed_scalar)
+        self.assertNotIn("changed_scalar", diff.to_dict())
+
+        legacy_diff = GraphDiff.from_json(diff.to_json())
+        self.assertIsNone(legacy_diff.changed_scalar)
+        self.assertEqual(legacy_diff.apply_diff(g).scalar, g.scalar)
+
 class TestStringToPhase(unittest.TestCase):
 
     def test_numeric_expression_parses_to_fraction(self):
