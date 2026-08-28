@@ -25,6 +25,7 @@ from ..utils import EdgeType, FloatInt, FractionLike, VertexType, phase_to_s
 from .base import ET, VT, BaseGraph
 from .graph_s import GraphS
 from .jsonparser import string_to_phase
+from .scalar import Scalar
 
 
 class GraphDiff(Generic[VT, ET]):
@@ -40,11 +41,13 @@ class GraphDiff(Generic[VT, ET]):
     changed_edata: dict[ET, Any]
     variable_types: dict[str, bool]
     var_registry: VarRegistry
+    changed_scalar: Scalar | None
 
     def __init__(self, g1: BaseGraph[VT, ET], g2: BaseGraph[VT, ET]) -> None:
         self.calculate_diff(g1,g2)
 
     def calculate_diff(self, g1: BaseGraph[VT, ET], g2: BaseGraph[VT, ET]) -> None:
+        self.changed_scalar = g2.scalar.copy() if g1.scalar != g2.scalar else None
         self.changed_vertex_types = {}
         self.changed_edge_types = {}
         self.changed_phases = {}
@@ -155,6 +158,8 @@ class GraphDiff(Generic[VT, ET]):
 
         for name in self.var_registry.vars():
             g.var_registry.set_type(name, self.var_registry.get_type(name))
+        if self.changed_scalar is not None:
+            g.scalar = self.changed_scalar.copy()
         g.rebind_variables_to_registry()
         return g
 
@@ -166,7 +171,7 @@ class GraphDiff(Generic[VT, ET]):
         for key, value in self.changed_edata.items():
             changed_edata_str_dict[f"{key[0]},{key[1]}"] = value # type: ignore
         changed_phases_str = {k: phase_to_s(v, limit_denominator=False) for k, v in self.changed_phases.items()}
-        return {
+        diff = {
             "removed_verts": self.removed_verts,
             "new_verts": self.new_verts,
             "removed_edges": self.removed_edges,
@@ -179,6 +184,9 @@ class GraphDiff(Generic[VT, ET]):
             "changed_edata": changed_edata_str_dict,
             "variable_types": self.var_registry.types,
         }
+        if self.changed_scalar is not None:
+            diff["changed_scalar"] = self.changed_scalar.to_dict()
+        return diff
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict())
@@ -203,6 +211,8 @@ class GraphDiff(Generic[VT, ET]):
             gd.changed_edata = map_dict_keys(d["changed_edata"], lambda x: tuple(map(int, x.split(","))))
         else:
             gd.changed_edata = {}
+        changed_scalar = d.get("changed_scalar")
+        gd.changed_scalar = Scalar.from_json(changed_scalar) if changed_scalar is not None else None
         return gd
 
 def map_dict_keys(d: dict[str, Any], f: Callable[[str], Any]) -> dict[Any, Any]:
