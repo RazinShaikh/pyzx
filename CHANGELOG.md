@@ -8,6 +8,9 @@ Hence, occasionally changes will be backwards incompatible (although they will a
 
 ## [Unreleased]
 
+### Added
+- The X-H bialgebra rule now supports phase-valued H-boxes, including explicit unit-complex labels. The generalized rule is applied explicitly, while automatic simplification remains restricted to standard H-boxes. (by @RazinShaikh)
+
 ### Fixed
 - Automatic tensor contraction now falls back to the naive strategy for diagrams containing vertex types other than boundaries, Z-spiders, or X-spiders, fixing default contraction for W-spiders and Z-boxes (by @henriquejsza).
 - `to_tikz` no longer drops Hadamards on edges that touch a boundary. Such an edge was exported as a plain wire plus a `hadamard` node that no `\draw` referenced, so the Hadamard was lost on reimport and the diagram gained a disconnected H-box. These edges now use the same `hadamard edge` style as every other Hadamard edge (by @gauthamkanagaraj).
