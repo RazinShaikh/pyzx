@@ -329,7 +329,7 @@ def is_bialg_op_match(g: BaseGraph[VT,ET],vertices: list[VT]) -> bool:
 
 def unsafe_bialgebra_op(g: BaseGraph[VT,ET],
         matches: Tuple[List[VT], List[VT]],
-        edge_type: Optional[EdgeType] = EdgeType.SIMPLE
+        edge_type: EdgeType = EdgeType.SIMPLE
         ) -> bool:
     """Applies the bialgebra rule to a connected pair of Z and X spiders in the opposite direction"""
     def get_neighbors_and_loops(type1_vertices: List[VT], type2_vertices: List[VT]) -> Tuple[List[Tuple[VT, EdgeType]], List[EdgeType]]:
