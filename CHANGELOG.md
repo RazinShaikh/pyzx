@@ -8,6 +8,8 @@ Hence, occasionally changes will be backwards incompatible (although they will a
 
 ## [Unreleased]
 
+## [0.10.6] - 2026-09-01
+
 ### Fixed
 - `GraphDiff` now tracks, applies, and serializes changes to a graph's global scalar. (by @RazinShaikh)
 - Automatic tensor contraction now falls back to the naive strategy for diagrams containing vertex types other than boundaries, Z-spiders, or X-spiders, fixing default contraction for W-spiders and Z-boxes (by @henriquejsza).
